@@ -20,6 +20,10 @@ export const formatJSONResponse = (response: Record<string, unknown>) => {
 export const successResponse = (data: any, statusCode = StatusCode.OK) => {
     return {
         statusCode,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': true,
+        },
         body: JSON.stringify(data, null, 2),
     }
 }
@@ -27,6 +31,10 @@ export const successResponse = (data: any, statusCode = StatusCode.OK) => {
 export const errorResponse = (message: string, statusCode = StatusCode.INTERNAL_SERVER_ERROR) => {
     return {
         statusCode,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': true,
+        },
         body: JSON.stringify(message, null, 2),
     }
 }
@@ -34,6 +42,10 @@ export const errorResponse = (message: string, statusCode = StatusCode.INTERNAL_
 export const notFoundResponse = (message: string, statusCode = StatusCode.NOT_FOUND) => {
     return {
         statusCode,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': true,
+        },
         body: JSON.stringify(message, null, 2),
     }
 }
