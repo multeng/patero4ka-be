@@ -1,21 +1,32 @@
 import {middyfy} from '@libs/lambda';
 import {successResponse, notFoundResponse, errorResponse} from "@libs/apiGateway";
-import fakeData from '../data.json';
-import getProductsAsync from "@functions/async";
+import {Client} from 'pg';
+import {DBOptions} from "@functions/DBOptions";
 
-const getProductById = async (event) => {
+const getProductById = async (event, context) => {
+    console.log("Event: ", event);
+    console.log("Context: ", context);
+
+    const { id } = event.pathParameters;
+    const client = new Client(DBOptions);
     try {
-        const {id} = event.pathParameters;
-        const products = await getProductsAsync(fakeData);
-        const product = products.find((product) => id === product.id);
+        await client.connect();
+        const { rows: product } = await client.query(`
+            SELECT products.id, products.title, products.description, products.img,
+            products.price, stocks.count
+            FROM products JOIN stocks ON products.id=stocks.product_id
+            WHERE products.id='${id}' ;
+        `);
 
-        if (!product) {
+        if (!product.length) {
             return notFoundResponse('product not found');
         }
 
-        return successResponse(product);
+        return successResponse(product[0]);
     } catch (e) {
         return errorResponse(e.message);
+    } finally {
+        client.end();
     }
 }
 
