@@ -9,14 +9,12 @@ const getProductById = async (event, context) => {
 
     const { id } = event.pathParameters;
     const client = new Client(DBOptions);
+    await client.connect();
+
     try {
-        await client.connect();
-        const { rows: product } = await client.query(`
-            SELECT products.id, products.title, products.description, products.img,
-            products.price, stocks.count
-            FROM products JOIN stocks ON products.id=stocks.product_id
-            WHERE products.id='${id}' ;
-        `);
+        const { rows: product } = await client.query(
+            `SELECT p.id, title, description, price, img, s.count FROM products p, stocks s WHERE p.id = s.product_id and p.id = $1;`
+            , [id]);
 
         if (!product.length) {
             return notFoundResponse('product not found');

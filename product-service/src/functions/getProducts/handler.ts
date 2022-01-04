@@ -9,13 +9,11 @@ const getProducts = async (event, context): Promise<any> => {
     console.log("Context: ", context);
 
     const client = new Client(DBOptions);
+    await client.connect();
 
     try {
-        await client.connect();
-        const { rows: products } = await client.query(`
-        SELECT p.id, title, description, img, price, count 
-            FROM products p 
-            JOIN stocks s ON p.id = s.product_id`);
+        const { rows: products } = await client.query(
+            `SELECT p.id, title, description, price, img, count FROM products p JOIN stocks s ON p.id = s.product_id;`);
         return successResponse(products);
     } catch (e) {
         return errorResponse(e.message);

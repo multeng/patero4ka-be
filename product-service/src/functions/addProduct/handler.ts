@@ -13,11 +13,10 @@ const addProduct = async (event, context) => {
     if (!product || !product.title || !product.price || !product.count) {
         return badRequestResponse();
     }
+    await client.connect();
+    await client.query('begin');
 
     try {
-        await client.connect();
-        await client.query('begin');
-
         const { rows: dataFromProductTable } = await client.query(
             'INSERT INTO products(title, description, img, price) values ($1, $2, $3, $4) RETURNING *',
             [product.title, product.description, product.img, product.price]
