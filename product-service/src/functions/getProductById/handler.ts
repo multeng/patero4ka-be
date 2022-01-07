@@ -1,15 +1,13 @@
 import {middyfy} from '@libs/lambda';
 import {successResponse, notFoundResponse, errorResponse} from "@libs/apiGateway";
-import {Client} from 'pg';
-import {DBOptions} from "@functions/DBOptions";
+import {DBConnect} from "@functions/DBConnect"
 
 const getProductById = async (event, context) => {
     console.log("Event: ", event);
     console.log("Context: ", context);
 
     const { id } = event.pathParameters;
-    const client = new Client(DBOptions);
-    await client.connect();
+    const client = await DBConnect();
 
     try {
         const { rows: product } = await client.query(
