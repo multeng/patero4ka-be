@@ -4,7 +4,6 @@ config.update({region: 'eu-west-1', signatureVersion: 'v4'});
 const s3 = new S3();
 
 export const getSignedUrl = async (filename: string) => {
-    console.log('BUCKET: ', process.env.UPLOAD_BUCKET);
     try {
         return await s3.getSignedUrlPromise('putObject', {
             Bucket: process.env.UPLOAD_BUCKET,
