@@ -10,7 +10,7 @@ const getProducts = async (event, context): Promise<any> => {
     const client = await DBConnect();
 
     try {
-        const { rows: products } = await client.query(
+        const {rows: products} = await client.query(
             `SELECT p.id, title, description, price, img, count FROM products p JOIN stocks s ON p.id = s.product_id;`);
         return successResponse(products);
     } catch (e) {
