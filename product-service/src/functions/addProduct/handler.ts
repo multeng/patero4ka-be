@@ -15,25 +15,25 @@ const addProduct = async (event, context) => {
     await client.query('begin');
 
     try {
-        const { rows: dataFromProductTable } = await client.query(
+        const {rows: dataFromProductTable} = await client.query(
             'INSERT INTO products(title, description, img, price) values ($1, $2, $3, $4) RETURNING *',
             [product.title, product.description, product.img, product.price]
         );
         console.log('Data from product table: ', dataFromProductTable);
 
-        const { rows: dataFromStockTable } = await client.query(
+        const {rows: dataFromStockTable} = await client.query(
             'INSERT INTO stocks(product_id, count) values ($1, $2) RETURNING *',
             [dataFromProductTable[0].id, product.count]
         );
 
-        console.log('Data from stock table: ',dataFromStockTable);
+        console.log('Data from stock table: ', dataFromStockTable);
 
         await client.query('commit');
         return successResponse({...dataFromProductTable[0], count: dataFromStockTable[0].count});
 
     } catch (e) {
         await client.query('rollback');
-        return errorResponse(e.message );
+        return errorResponse(e.message);
     } finally {
         client.end();
     }
