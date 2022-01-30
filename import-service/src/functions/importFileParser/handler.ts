@@ -9,7 +9,6 @@ const importFileParser = async (event) => {
         for (const record of event.Records) {
             results.push(await parse(record.s3.object.key));
         }
-        Promise.all(results);
         return successResponse('file parsed');
     } catch (e) {
         return errorResponse(e.message)

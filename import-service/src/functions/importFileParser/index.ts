@@ -9,7 +9,8 @@ export default {
                 event: 's3:ObjectCreated:*',
                 rules: [
                     {
-                        prefix: 'uploaded/'
+                        prefix: 'uploaded/',
+                        suffix: 'csv'
                     }
                 ],
                 existing: true,

@@ -10,9 +10,10 @@
     "node": ">=14.15.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.49.0",
+    "@aws-sdk/s3-request-presigner": "^3.49.0",
     "@middy/core": "^2.5.3",
     "@middy/http-json-body-parser": "^2.5.3",
-    "aws-sdk": "^2.1053.0",
     "csv-parser": "^3.0.0",
     "dotenv": "^10.0.0"
   },
