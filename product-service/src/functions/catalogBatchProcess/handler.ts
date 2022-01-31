@@ -14,9 +14,15 @@ const catalogBatchProcess = async (event) => {
             const product = JSON.parse(record.body);
             await productService.addProduct(product);
             const command = new PublishCommand({
-                Subject: 'Product was added',
+                Subject: `${product.title} has been created`,
                 Message: JSON.stringify(product),
-                TopicArn: process.env.SNS_TOPIC_ARN
+                TopicArn: process.env.SNS_TOPIC_ARN,
+                MessageAttributes: {
+                    price: {
+                        DataType: 'Number',
+                        StringValue: `${product.price}`
+                    }
+                }
             })
             await snsClient.send(command);
         }
