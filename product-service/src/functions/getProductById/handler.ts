@@ -1,6 +1,7 @@
 import {middyfy} from '@libs/lambda';
 import {successResponse, notFoundResponse, errorResponse} from "@libs/apiGateway";
-import {DBConnect} from "@functions/DBConnect"
+import {ProductService} from "../../services/product.service";
+import {DBConnect} from "@functions/DBConnect";
 
 const getProductById = async (event, context) => {
     console.log("Event: ", event);
@@ -8,21 +9,16 @@ const getProductById = async (event, context) => {
 
     const {id} = event.pathParameters;
     const client = await DBConnect();
+    const productService = new ProductService(client);
 
     try {
-        const {rows: product} = await client.query(
-            `SELECT p.id, title, description, price, img, s.count FROM products p, stocks s WHERE p.id = s.product_id and p.id = $1;`
-            , [id]);
-
-        if (!product.length) {
+        const product = await productService.getProductById(id);
+        if (!product) {
             return notFoundResponse('product not found');
         }
-
-        return successResponse(product[0]);
+        return successResponse(product);
     } catch (e) {
         return errorResponse(e.message);
-    } finally {
-        client.end();
     }
 }
 

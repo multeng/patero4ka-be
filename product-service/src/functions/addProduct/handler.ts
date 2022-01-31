@@ -1,6 +1,7 @@
 import {middyfy} from '@libs/lambda';
 import {successResponse, errorResponse, badRequestResponse} from "@libs/apiGateway";
-import {DBConnect} from "@functions/DBConnect"
+import {ProductService} from "../../services/product.service";
+import {DBConnect} from "@functions/DBConnect";
 
 const addProduct = async (event, context) => {
     console.log("Event: ", event);
@@ -8,34 +9,17 @@ const addProduct = async (event, context) => {
 
     const product = event.body;
     const client = await DBConnect();
+    const productService = new ProductService(client);
 
     if (!product || !product.title || !product.price || !product.count) {
         return badRequestResponse();
     }
-    await client.query('begin');
 
     try {
-        const {rows: dataFromProductTable} = await client.query(
-            'INSERT INTO products(title, description, img, price) values ($1, $2, $3, $4) RETURNING *',
-            [product.title, product.description, product.img, product.price]
-        );
-        console.log('Data from product table: ', dataFromProductTable);
-
-        const {rows: dataFromStockTable} = await client.query(
-            'INSERT INTO stocks(product_id, count) values ($1, $2) RETURNING *',
-            [dataFromProductTable[0].id, product.count]
-        );
-
-        console.log('Data from stock table: ', dataFromStockTable);
-
-        await client.query('commit');
-        return successResponse({...dataFromProductTable[0], count: dataFromStockTable[0].count});
-
+        const addedProduct = await productService.addProduct(product);
+        return successResponse(addedProduct);
     } catch (e) {
-        await client.query('rollback');
         return errorResponse(e.message);
-    } finally {
-        client.end();
     }
 }
 

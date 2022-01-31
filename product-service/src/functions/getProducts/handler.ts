@@ -1,6 +1,7 @@
 import {middyfy} from '@libs/lambda';
 import {successResponse, errorResponse} from "@libs/apiGateway";
 import {DBConnect} from "@functions/DBConnect"
+import {ProductService} from "../../services/product.service";
 
 
 const getProducts = async (event, context): Promise<any> => {
@@ -8,10 +9,10 @@ const getProducts = async (event, context): Promise<any> => {
     console.log("Context: ", context);
 
     const client = await DBConnect();
+    const productService = new ProductService(client);
 
     try {
-        const {rows: products} = await client.query(
-            `SELECT p.id, title, description, price, img, count FROM products p JOIN stocks s ON p.id = s.product_id;`);
+        const products = await productService.getProducts();
         return successResponse(products);
     } catch (e) {
         return errorResponse(e.message);

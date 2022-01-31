@@ -1,6 +1,6 @@
 import type {AWS} from '@serverless/typescript';
 
-import {getProducts, getProductById, addProduct} from "@functions/index";
+import {getProducts, getProductById, addProduct, catalogBatchProcess} from "@functions/index";
 
 const serverlessConfiguration: AWS = {
     service: 'product-service',
@@ -23,12 +23,60 @@ const serverlessConfiguration: AWS = {
             PG_DATABASE: '${env:PG_DATABASE}',
             PG_PORT: '${env:PG_PORT}',
             PG_USER: '${env:PG_USER}',
-            PG_PASSWORD: '${env:PG_PASSWORD}'
+            PG_PASSWORD: '${env:PG_PASSWORD}',
+            SNS_TOPIC_ARN: {
+                Ref: 'CreateProductTopic',
+            }
         },
         lambdaHashingVersion: '20201221',
+        iamRoleStatements: [
+            {
+                Effect: 'Allow',
+                Action: ['sns:*'],
+                Resource: {
+                    Ref: 'CreateProductTopic',
+                }
+            }
+        ]
+    },
+    resources: {
+        Resources: {
+            CreateProductTopic: {
+                Type: 'AWS::SNS::Topic',
+                Properties: {
+                    TopicName: 'createProductTopic'
+                }
+            },
+            CreateNotifyExpensiveProduct: {
+                Type: 'AWS::SNS::Subscription',
+                Properties: {
+                    Endpoint: '${env:EXPENSIVE_EMAIL}',
+                    Protocol: 'email',
+                    TopicArn: {
+                        Ref: 'CreateProductTopic'
+                    },
+                    FilterPolicy: {
+                        price: [{numeric: ['>=', 100]}]
+                    }
+                }
+            },
+            CreateNotifyCheapProduct: {
+                Type: 'AWS::SNS::Subscription',
+                Properties: {
+                    Endpoint: '${env:CHEAP_EMAIL}',
+                    Protocol: 'email',
+                    TopicArn: {
+                        Ref: 'CreateProductTopic'
+                    },
+                    FilterPolicy: {
+                        price: [{numeric: ['<', 100]}]
+                    }
+                }
+            }
+        }
     },
     // import the function via paths
-    functions: {getProducts, getProductById, addProduct},
+    functions: {getProducts, getProductById, addProduct, catalogBatchProcess},
     package: {individually: true},
     custom: {
         esbuild: {
