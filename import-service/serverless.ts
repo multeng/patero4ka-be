@@ -19,7 +19,10 @@ const serverlessConfiguration: AWS = {
         environment: {
             AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
             NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
-            UPLOAD_BUCKET: '${env:UPLOAD_BUCKET}'
+            UPLOAD_BUCKET: '${env:UPLOAD_BUCKET}',
+            SQS_URL: {
+                Ref: 'catalogItemsQueue',
+            }
         },
         lambdaHashingVersion: '20201221',
         iamRoleStatements: [
@@ -32,8 +35,32 @@ const serverlessConfiguration: AWS = {
                 Effect: 'Allow',
                 Action: ['s3:*'],
                 Resource: 'arn:aws:s3:::${env:UPLOAD_BUCKET}/*'
+            },
+            {
+                Effect: 'Allow',
+                Action: ['sqs:*'],
+                Resource: {
+                    'Fn::GetAtt': ['catalogItemsQueue', 'Arn']
+                }
             }
         ]
+    },
+    resources: {
+        Resources : {
+            catalogItemsQueue: {
+                Type: 'AWS::SQS::Queue',
+                Properties: {
+                    QueueName: 'catalogItemsQueue'
+                }
+            }
+        },
+        Outputs: {
+            SQSArn: {
+                Value: {
+                    'Fn::GetAtt': ['catalogItemsQueue', 'Arn']
+                }
+            },
+        }
     },
     // import the function via paths
     functions: {importProductsFile, importFileParser},

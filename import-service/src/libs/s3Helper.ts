@@ -1,8 +1,10 @@
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
+import {SQSClient, SendMessageCommand} from "@aws-sdk/client-sqs";
 import {GetObjectCommand, CopyObjectCommand, PutObjectCommand, DeleteObjectCommand, S3Client} from "@aws-sdk/client-s3";
 import csvParser from 'csv-parser';
 
 const s3Client = new S3Client({region: 'eu-west-1'});
+const sqsClient = new SQSClient({region: 'eu-west-1'});
 
 
 export const getImportSignedUrl = async (filename: string) => {
@@ -18,6 +20,11 @@ export const getImportSignedUrl = async (filename: string) => {
     } catch (e) {
         console.log(e);
     }
+}
+
+const sendSqsMessage = async (message) => {
+    const command = new SendMessageCommand({QueueUrl: process.env.SQS_URL, MessageBody: JSON.stringify(message)});
+    await sqsClient.send(command);
 }
 
 export const parse = async (key: string) => {
@@ -36,11 +43,14 @@ export const parse = async (key: string) => {
         (await s3Client.send(getCommand)).Body
             .pipe(csvParser())
             .on('data', (row) => console.log('Row: ', row))
-            .on('end', async () => {
-                await s3Client.send(copyCommand);
-                await s3Client.send(deleteCommand);
+            .on('data', async (message) => await sendSqsMessage(message))
+            .on('end', () => {
+                console.log('END STREAM')
             })
             .on('error', (error) => console.log('ERROR: ', error))
+
+        await s3Client.send(copyCommand);
+        await s3Client.send(deleteCommand);
     } catch (e) {
         console.log(e);
     }
