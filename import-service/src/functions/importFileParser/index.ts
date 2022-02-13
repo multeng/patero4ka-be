@@ -10,7 +10,6 @@ export default {
                 rules: [
                     {
                         prefix: 'uploaded/',
-                        suffix: 'csv'
                     }
                 ],
                 existing: true,
